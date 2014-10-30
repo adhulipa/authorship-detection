@@ -1,0 +1,657 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="stylesheet" href="styles.css" type="text/css" />
+    <title>
+      CSC108H Assignment 2
+    </title>
+  </head>
+  
+  <body>
+    <div class="title">
+      <h1>CSC108H Assignment 2, Fall 2010</h1>
+    </div>
+  	
+    <h2>Due Wednesday 10 November, by 10:00 pm sharp!</h2>
+    <h2><font color="red">There are no partners for this assignment.</font></h2>
+
+    <h2>Introduction</h2>
+    <p>
+      The purpose of this assignment is to give you more practice
+	  writing functions and programs in Python, and in particular
+	  writing code with strings, lists, and loops.
+    </p>
+    
+    <p>
+    You should spend <em>at least</em> one hour
+    reading through this handout to make sure you understand what is
+    required, so that you don't waste your time going in circles, or worse yet,
+ 	hand in something you think is correct and find out later that you
+	misunderstood the specifications.
+	Highlight the handout, scribble on it, and find all the things
+	you're not sure about as soon as possible.
+    </p>
+    
+
+    <h2>Authorship Detection</h2>
+
+	<p>
+    Automated authorship detection is the process of using a computer program
+    to analyze a large collection of texts, one of which has an unknown author,
+    and making guesses about the author of that unattributed text.
+    The basic idea is to use different statistics from the text 
+    -- called "features" in the 
+    machine learning community -- to form a linguistic "signature" for each 
+    text. One example of a simple feature is the number of words per sentence. Some
+    authors may prefer short sentences while others tend to write sentences that go 
+    on and on with lots and lots of words and not very concisely, just like this one. 
+    Once we have calculated the signatures of two different texts we can 
+    determine their similarity and calculate a likelihood that they were written 
+    by the same person. 
+    </p>
+	<p>
+    Automated authorship detection has uses in plagiarism detection, 
+    email-filtering, social-science research and as forensic evidence in court cases.
+    Also called authorship attribution, this is a current research field and the
+    state-of-the-art linguistic features are considerably more complicated than
+    the five simple features that we will use for our program. But even with our
+    very basic features and simplifications, your program may still be able to make
+    some reasonable predictions about authorship.
+    </p>
+		
+    <p>
+	We have begun a program that guesses the author of a text file
+    based on comparing it to a set of linguistic signatures.
+	Download <a href="find_author.py">find_author.py</a>.
+	(Be sure to right click on the link in your browser so that you can use
+	"save as" rather than cutting and pasting the code.)
+ 	This program runs, but does almost nothing, because many of the functions'
+ 	bodies do little or nothing.
+ 	One symptom of this is that the program crashes if the
+ 	user types in any invalid inputs. In particular, it requests the name of a 
+    directory (another name for folder) of linguistic signature files and expects the directory
+    to contain only those files -- more about that later.
+ 	Your task is to complete the program by filling
+ 	in the missing pieces.  <!--Search for the string "To do" to
+ 	find them. -->
+ 	</p>
+
+	 
+	<h2>An Overview: How the program works</h2>
+	
+	<p>
+	The program begins by asking the user for two strings: 
+	the first is the name of a file of text whose authorship is unknown
+    (the mystery file) and the second is the name
+    of a directory of files, each containing one linguistic signature.
+	</p>
+	
+	<p>
+	The program calculates the linguistic signature for the mystery file and then 
+    calculates scores indicating how well the mystery file matches each signature file in the 
+    directory.  The author from the signature file that best matches the mystery
+    file is reported.
+	</p>
+	
+    <h2>Some Definitions: What really is a sentence?</h2>
+    <p>Before we go further, it will be helpful to agree on what we will 
+    call a sentence, a word and a phrase.
+    Let's define a <strong>token</strong> to be a string that you get from calling
+    the string method <code>split</code> on a line of the file. 
+   We define a <strong>word</strong> to be a non-empty token 
+   from the file that isn't completely
+   made up of punctuation. You'll find the "words" in a file by using 
+   <code>str.split</code>
+   to find the tokens and then removing the puctuation from the words using the 
+   <code>clean_up</code> function that we provided in <code>find_author.py</code>.
+   If after calling <code>clean_up</code> the resulting word 
+   is an empty string, then it isn't considered a word.
+   Notice that <code>clean_up</code> converts the word to lowercase. 
+   This means that once they have been cleaned up, the words yes, Yes and YES! will all be the same.
+   </p>
+
+    <p>
+    For the purposes of this assignment, we will consider a 
+    <strong>sentence</strong> 
+    to be a sequence of characters that (1) is terminated by (but doesn't include)
+    the characters <code><bf>! ? . </bf></code> 
+    or the end of the file, (2) excludes whitespace on either end,
+    and (3) is not empty. 
+    Consider <a href="sentence_example.txt">this file</a>.
+    Remember that a file is just a linear sequence of characters,
+    even though it looks two dimensional.
+    This file contains these characters:
+    <pre>
+this is the\nfirst sentence. Isn't\nit? Yes ! !! This \n\nlast bit :) is also a sentence, but \nwithout a terminator other than the end of the file\n
+    </pre>
+     By our definition, there are four "sentences" in it:
+   </p>
+
+    <!--table width="100%" border="1" cellpadding="0" cellspacing="0" -->
+
+    <p>
+<table border="1" cellpadding="1" cellspacing="1"
+    <tr>
+    <td> Sentence 1</td>
+    <td><pre>"this is the\nfirst sentence"</pre></td>
+    </tr><tr>
+    <td> Sentence 2</td>
+    <td><pre>"Isn't\nit"</pre></td>
+    </tr><tr>
+    <td> Sentence 3</td>
+    <td><pre>"Yes"</pre></td>
+    </tr><tr>
+    <td> Sentence 4</td>
+    <td><pre>"This \n\nlast bit :) is also a sentence, but \nwithout a terminator other than the end of the file"</pre></td>
+    </tr>
+</table>
+</p>
+
+   <p>
+   Notice that:
+    <ul>
+       <li> The sentences do not include their terminator character.
+       <li> The last sentence was not terminated by a character;
+            it finishes with the end of the file.
+        <li> Sentences can span multiple lines of the file.
+    </ul>
+   </p>
+
+
+   <p><strong>Phrases</strong> are defined as non-empty sections of 
+   sentences that are separated by colons, commas, or
+   semi-colons. The sentence prior to this one has three phrases by our definition. This sentence right here only has one (because
+   we don't separate phrases based on parentheses).
+   </p>
+   <p>We realize that these are not the correct definitions for sentences, words or phrases but using them will
+   make the assignment easier. More importantly, it will make your results match what we are expecting when we test
+   your code. You may not "improve" these definitions 
+   <strong>or your assignment will be marked as incorrect.</strong>
+   </p>
+   
+
+    <h2>Linguistic features we will calculate</h2>
+
+    <p>
+    The first linguistic feature recorded in the signature is the
+    <b>average word length</b>. 
+    This is simply the average number of characters per 
+    word, calculated after the punctuation has been stripped using the already-written
+    clean_up function. In the sentence prior to this one, the
+    average word length
+    is 5.909.  Notice that the comma and the final period are stripped but the
+    hyphen inside "already-written" and the underscore in "clean_up" are both 
+    counted. That's fine. 
+    You must not change the <code>clean_up</code>
+    function that does punctuation stripping.
+    </p>
+
+    <p>
+    <b>Type-Token Ratio</b> is the number of different words used in a text 
+    divided by the total number of words. It's a measure of how repetitive the vocabulary is.
+    Again you must use the provided <code>clean_up</code>
+    function so that "this","This","this," and "(this" 
+    are <em>not</em> counted as different words.
+    </p> 
+
+    <p>
+    <b>Hapax Legomana Ratio</b> is similar to Type-Token Ratio in that it is a ratio using
+    the total number of words as the denominator. The numerator for 
+    the Hapax Legomana Ratio is the number of words occurring exactly once in the text.
+    In your code for this function you must not use a Python dictionary (even if you have already
+    learned about them on your own or are reading ahead in class) or any other
+    technique that keeps a count of the frequency of each word in the text.
+    Instead use this approach: As you read the file, keep two lists. The first 
+    contains all the words that have appeared at least
+    once in the text and the second has all the words that have appeared at least twice in the 
+    text. Of course, the words on the second list must also appear on the first. Once you've read
+    the whole text, you can use the two lists to calculate the number of words that appeared 
+    <em>exactly</em> once.
+    </p>
+    
+    <p>
+    The fourth linguistic feature your code will calculate is the <b>average
+    number of words per sentence</b>. 
+    </p>
+    
+    <p>
+    The final linguistic feature is a measure of <b>sentence complexity</b> and is 
+    the average number of phrases per sentence. We will 
+    find the phrases by taking each
+    sentence, as defined above, and splitting it on any of colon, semi-colon or comma.
+    </p>
+    
+    <p>
+    Since several features require the program to split a string
+    on any of a set of different separators, it makes sense to write a helper
+    function to do this task. To do this you will complete the function 
+    <code>split_on_separators</code> as described by the docstring in the 
+    code.
+    </p>
+
+    <h2>Finding the Sentences</h2
+    <p> Because sentences can span multiple lines of the file, it won't work 
+    to process the file
+    one line at a time calling <code>split_on_separators</code> 
+    on each individual line.
+    Instead, create a single huge string that stores the entire file.
+    Then call <code>split_on_separators</code> on that string.
+    This solution would waste a lot of space
+    for really large files but it will be fine for our purposes. You'll
+    learn about algorithms that can handle large files in a future course.
+    </p>
+    <p> There are other ways where our assignment design isn't very efficient. For example, having the 
+    different linguistic features calculated by separate functions means that our program has to keep 
+    going over the text file doing many of the same actions (breaking it into words and cleaning them up) 
+    for each feature. This is inefficient if we are certain that anyone using our code would always
+    be calculating all the features. However, our design allows another program to import our module
+    and efficiently calculate a single linguistic feature without calculating the others. It also
+    makes the code easier to understand, which in today's computing environment is often more important
+    than efficiency.
+    </p>
+
+    <h2>Signature Files</h2>
+    <p>
+    We have created a 
+    <a href="data.shtml">set of signature files for you to use</a>
+    that have a fixed format. The first line of each file is the name of the
+    author and the next five lines each contain a single real number. These are values
+    for the five linguistic features in the following order:
+    <ul>
+    <li>Average Word Length</li> 
+    <li>Type-Token Ratio</li> 
+    <li>Hapax Legomana Ratio</li> 
+    <li>Average Sentence Length</li> 
+    <li>Sentence Complexity</li> 
+    </ul>
+    You are welcome to create additional signature files for testing your code and for
+    fun, but you must not change this format. Our testing of your program will depend
+    on its ability to read the required signature-file format.
+    </p>
+    
+    <h2>Determining the best match</h2>
+    <p>
+    In order to determine the best match between an unattributed text and the known signatures, 
+    the program uses the function 
+    <code>compare_signatures</code> which calculates and returns a measure of 
+    the similarity of two linguistic signatures. You could imagine developing some
+    complicated schemes but our program will do almost the simplest thing
+    imaginable. The similarity of signatures <code>a</code> and <code>b</code> 
+    will be calculated as the sum of the 
+    differences on each feature, but with each difference multiplied by a "weight" so
+    that the influence of each feature on the total score can be controlled. In other words,
+    the similarity of signatures a and b (<code>S<sub>ab</sub></code>) is the sum over all 
+    five features of: the absolute value
+    of the feature difference times the corresponding weight for that feature.
+    The 
+    equation below expresses this definition mathematically:
+    <br></br>
+    <img src="equation.jpg"> 
+    <br></br>
+    where <code>f<sub>i,x</sub></code> is the value of feature <code>i</code> in signature
+    <code>x</code> and <code>w<sub>i</sub></code> is the weight associated with feature
+    <code>i</code>.
+    
+    <p>
+    The example below illustrates.  Each row concerns one of the five features.
+    Suppose signature 1 and signature 2 are as shown in columns 2 and 3, and 
+    the features are weighted as shown in column 4.
+    The final column shows the contribution of each feature to the overall sum,
+    which is 16.5.
+    It represents the similarity of signatures 1 and 2.
+    <table border="1" cellpadding="1" cellspacing="1"
+        <tr>
+            <td>Feature number</td>
+            <td>Value of feature in signature 1</td>
+            <td>Value of feature in signature 2</td>
+            <td>Weight of feature</td>
+            <td>Contribution of this feature to the sum</td>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>4.4</td>
+            <td>4.3</td>
+            <td>11</td>
+            <td>abs(4.4-4.3)*11 = 1.1</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td>0.1</td>
+            <td>0.1</td>
+            <td>33</td>
+            <td>abs(0.1-0.1)*33 = 0</td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td>0.05</td>
+            <td>0.04</td>
+            <td>50</td>
+            <td>abs(0.05-0.04)*50 = .5</td>
+        </tr>
+        <tr>
+            <td>4</td>
+            <td>10</td>
+            <td>16</td>
+            <td>0.4</td>
+            <td>abs(10-16)*0.4 = 2.4</td>
+        </tr>
+        <tr>
+            <td>5</td>
+            <td>2</td>
+            <td>4</td>
+            <td>4</td>
+            <td>abs(2-4)*4 = 8</td>
+        </tr>
+        <tr>
+            <td>SUM</td>
+            <td> </td>
+            <td> </td>
+            <td> </td>
+            <td>12</td>
+        </tr>
+    </table>
+    Notice that if signatures 1 and 2 were exactly the same on every feature, 
+    the similarity would add up to zero.  (It may have made sense to call this "difference" rather
+    than similarity.)
+    Notice also that if they are different on a feature that is weighted higher,
+    there overall similarity value goes up more than if they are different on a feature
+    with a low weight.  This is how weights can be used to tune the importance
+    of different features.
+    </p>
+    
+    <p>
+    You are required to complete function 
+    <code>compare_signatures</code>
+    according to the docstring and you must not change the header. Notice that the list of 
+    weights is provided to the function as a parameter. 
+    We have already set the weights that your program will use (see the main block) so you
+    don't need to play around trying different values.
+    </p> 
+    
+
+	<h2>Additional requirements</h2>
+	<ul>
+	<li>
+	Where a docstring says a function can assume something about a parameter
+	(e.g., it might say "text is a non-empty list") the function should not check that
+	this thing is actually true.  
+	Instead, when you call the function make sure that it is indeed true.
+	<li>
+	Do not change any of the existing code.  Add to it as specified in the comments.
+	<li>
+	Do not add any user input or output, except where you are explicitly told to.
+	In those cases, we have provided the 
+    exact <code>print</code> or <code>raw_input</code>
+	statement to use.  Do not modify these.
+	<li>
+	Functions <code>get_valid_filename</code> and <code>read_directory_name</code>
+	must not use any for loops, or they will receive a mark of zero.
+	The purpose of this is to make sure you get comfortable with while loops.
+	<li>
+	You must not use any <code>break</code> or <code>continue</code> statements.
+	Any functions that do will receive a mark of zero.
+	We are imposing this restriction (and we have not even taught you these 
+    statements) 
+	because they are very easy to "abuse," resulting in terrible code.
+	</ul>
+		
+    
+	<h2>How to tackle this assignment</h2>
+	<p>
+	This program is much larger than what you wrote for Assignment 1, so you'll
+	need a good strategy for how to tackle it.  Here is our suggestion.
+	</p>
+	
+	<h3>Principles:</h3>
+	<ul>
+	<li>
+	To avoid getting overwhelmed, deal with one function at a time.  
+	Start with functions that don't call any other functions; this will allow
+	you to test them right away.  The steps listed below give you a
+	reasonable order in which to write the functions.
+	<li>
+	For each function that you write, plan test cases for that function and
+	actually write the Python code to implement those tests <em>before</em> you
+	write the function.
+	It is hard to have the discipline to do this, but you will have a huge
+	advantage over your peers if you do.
+	<li>
+	Keep in mind throughout that any function you have might be a useful helper
+	for another function.
+	Part of your marks will be for taking advantage of opportunities to call an existing
+	function.
+	<li>
+	As you write each function, begin by designing it in English, using only a few
+	sentences.  If your design is longer than that, shorten it by describing the
+	steps at a higher level that leaves out some of the details.
+	When you translate your design into Python, look for steps that are described at such
+	a high level that they don't translate directly into Python.
+	Design a helper function for each of these, and put a call to the helpers into
+	your code.
+	Don't forget to write a great docstring for each helper!
+	</ul>
+	
+	<h3>Steps:</h3>
+	
+	Here is a good order in which to solve the pieces of this assignment.
+	<ol>
+	<li>
+	Read this handout thoroughly and carefully, making sure you understand everything 
+	in it, particularly the different linguistic features.
+	<li>
+	Read the starter code to get an overview of what you will be writing.
+	It is not necessary at this point to understand every detail of the functions
+	we have provided in order to make progress on this assignment.
+	<li> 
+	Create a module called <code>function_tester.py</code> and have it import
+	your <code>find_author</code> module.  
+	Add a main block to <code>function_tester</code>: that is where you can
+	put your code that tests your individual functions.  For now, it can just
+	say <code>pass</code>.
+    <li>
+	    Plan testing for, write, and test function <code>get_valid_filename</code>.
+	    In order to determine whether a file exists or not,
+	    use the function <code>os.path.exists</code>.
+	    Give it a string that is the name of a file, and <code>os.path.exists</code>
+	    will return a boolean
+	    indicating whether or not the file exists.
+	    The help for this function talks about giving it a path 
+	    (which is a description of the file and where it exists 
+        among all your folders),
+	    but if you give it a string that is simply a file name, it will check in
+	    the folder in which your code is running.
+    <li>
+	    Plan testing for, write, and test function <code>read_directory_name</code>.
+        Use the function <code>os.path.isdir</code> to check if a string is a valid
+        directory.
+    <li>
+	    Plan testing for, write, and test functions for the first three 
+        linguistic features: <code>average_word_length</code>,
+        <code>type_token_ratio</code>, and <code>hapax_legomana_ratio</code>.
+	<li>
+	    Write, and test function <code>split_on_separators</code>.
+        Test this function carefully on its own before trying to use it in your other 
+        functions.
+    <li>
+	    Write and test function <code>average_sentence_length</code>. 
+        Begin by writing code to extract the sentences from the file. Test that this part of
+        your code works correctly before you worry about calculating the average length.
+    <li>
+        Complete <code>avg_sentence_complexity</code> and finally <code>compare_signatures</code>.
+    <li>
+	    Now you have implemented all the functions.
+	    Run our <code>a2_self_test</code> module to confirm that your code passes
+	    our most basic tests. 
+	    Correct any errors that this uncovers.
+	    But of course if you did a great job of testing your functions as you wrote
+	    them, you won't find any new errors now.
+	<li>
+	    You are now ready to run the full author detection program:
+	    run <code>find_author</code>. To do this you will need to set up a
+        folder that contains <strong>only</strong> valid linguistic 
+        signature files. We are providing a set of these on the 
+        <a href="data.shtml">data files page</a> You'll also want some mystery text files
+        to analyze. We have put a number of these on the
+        <a href="data.shtml">data files page</a>.
+        If you are copying them to your home machine, don't put them in the 
+        same folder as the linguistic signature files. 
+	</ol>	
+	
+    <h2>Testing your code</h2>
+
+    <p>
+        We are providing a module called 
+        <a href="a2_self_test.py">
+            a2_self_test</a>
+        that imports your <code>find_author</code> and checks that 
+        most of the required functions
+        satisfy some of the basic 
+        requirements.
+        It does not check the two functions that involve input and output
+        with the user: <code>get_valid_filename</code> and
+        <code>read_directory_name</code>.
+    </p>
+    
+    <p>
+        When you run <code>a2_self_test.py</code>, it should produce no errors and its output
+        should consist only of one thing: the word "okay".  
+        If there is any other output at all,
+        or if any input is required from the user,
+        then your code is not following the assignment specifications correctly
+        and
+        <font color="red"><strong>will be marked as incorrect</strong></font>.
+        Go back and fix the error(s).
+    </p>
+    
+    <p> 
+        While you are playing with your program,
+        you may want to use the signature files and 
+        mystery text files we have provided.
+        This in conjunction with 
+        <code>a2_self_test</code> is still <strong>not</strong> sufficient testing to 
+        thoroughly test all of your functions under all possible
+        conditions.
+        With the functions on this assignment, there are many more possible cases
+        to test (and cases where your code could go wrong).
+        If you want to get a great mark on the correctness of your functions,
+        do a great job of testing them under all possible conditions.
+        Then we won't be able to find any errors that you haven't already fixed!        
+    </p>
+    
+    <h2>Marking</h2>
+
+    <p>
+      These are the aspects of your work that we will
+ 	  focus on in the marking: 
+    </p>
+
+    <ul>
+      <li>
+        <p>
+          <b>Correctness:</b> Your code
+		  should perform as specified.
+          Correctness, as measured by our tests, will count for the
+          largest single portion of your marks.
+        </p>
+      </li>
+      <li>
+          <p>
+          <b>Docstrings:</b> For each function that you design from scratch, 
+          write a good
+          <code>docstring</code>.
+          (Do not change the docstrings that we have already written for you.)
+          Make sure that you read the <a
+            href="rules.shtml">Assignment rules</a> page for some important
+            rules and guidelines about docstrings.
+            </p>
+      </li>
+      <li>
+          <p>
+          <b>Internal comments:</b> Within
+          functions, the more complicated parts of your code should also be
+          described using "internal" comments.
+          For this assignment, internal comments will be more important
+          than on assignment 1.
+          </p>
+      </li>
+      <li>
+        <p>
+          <b>Programming style:</b> Your variable names should be meaningful and
+		  your code as simple and clear as possible.
+        </p>
+      </li>
+      <li>
+          <b>Good use of helper functions:</b> If you find yourself repeating a task, you should add
+          a helper function and call that function instead of duplicating the
+          code.
+          And if a function is more than about 20 lines long, consider introducing
+          helper functions to do some of the work -- even if they will only be called once.
+      </li>
+      <li>
+        <p>
+          <b>Formatting style:</b> Make sure that you read the <a
+          href="rules.shtml">Assignment rules</a> page for some important
+          rules and guidelines about formatting your code.
+        </p>
+      </li>
+    </ul>
+
+
+    <h2><a name="submitting">Submitting your assignment</a></h2>
+    <p>
+      This assignment will be completed on your own without a partner.
+    </p>
+    <p>
+       You must hand in your work electronically, using the MarkUs online system.
+       Instructions for doing so are posted on the Assignments page
+       of the course website.
+    <p>
+    <p>
+      For this assignment, hand in just one file:
+        <ul>
+          <li><code>find_author.py</code></li>
+        </ul>
+    </p>
+    <p>
+       Once you have submitted, be sure to check that you have submitted 
+       the correct version; new or missing files will not be accepted after 
+       the due date.
+      Remember that spelling of filenames, including case, counts.  
+      <font color="red"><strong>If your file is not named exactly as above, 
+      your code will receive zero for correctness.</strong></font>
+    </p>
+
+    <h2> Future Thoughts</h2>
+    <p>
+    If you carefully examine the mystery files and correctly code up your assignment, you'll 
+    see that it correctly classifies many of the documents -- but not all. Some of the linguistic features 
+    that we have used (type-token ratio and hapax legoamana ratio in particular) are standard techniques, 
+    but they may not be sufficient to do the classification task. There are other standard features
+    and more sophisticated techniques that were too complicated for this assignment. Suppose
+    you could use a Python dictionary to keep a count of how many times each word appeared 
+    in a document. What new linguistic features would that allow you to use? 
+    Some authors like to use lots of exclamation marks!!! or perhaps
+    just a lot of punctuation?!
+    Could you devise a linguistic feature to measure this? While this is fun to think about,
+    do <b>not</b> add any different linguistic features to the version of the program that you
+    submit for marking.
+    </p>
+    <p>Another area for thought is how authorship attribution is related to plagiarism
+    detection. In this <a href="http://www.time.com/time/arts/article/0,8599,1930971,00.html?artId=1930971?contType=article?chn=arts">
+    TIME magazine article</a>, plagiarism detection software is used to support the claim
+    that Shakespeare was the author of an unattributed play.
+    </p>
+    <p>
+    In the field of machine learning (of which authorship detection is a subfield), programs
+    often learn their own configuration values through training.
+    In our case, could the program learn from trying to guess an author and
+    then being told the right answer? Could it learn to adjust the weights
+    being applied to the different features?  What about learning a new feature? How would
+    you do this? 
+    </p>
+
+   <!-- include file="pageend.txt" -->

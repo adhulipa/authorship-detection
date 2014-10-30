@@ -1,0 +1,22 @@
+Aditya Dhulipala
+
+Friday, 13 December 2013 1:57 AM IST
+- Been playing around with the module for the past couple of hours.
+- Extremey inefficient program. Takes a very long time to calculate Hepax Legomana ratio.
+---- This occurs because we are using two lists to keep track of the frequency of the words.
+---- This was the specification of the handout. However, it would be better to use a python dictionary.
+**. -- Need to re-write Hepax Legomana function to use dictionary
+
+
+
+
+- A peculiar behaviour (feature!?) of the program is that 
+    it requires the "ENTIRE" book written by the mystery author to correctly classify.
+    This is very, very inefficient. Becasue, almost half the text file is in legalese
+    regarding copyright information and documentation from Project Guttenberg
+**. Enhance the project to classify using more sophisticated Machine Learing techniques such as
+---- More features - use of punctuation etc.
+---- Use smarter Algortihms - Neural network to train the funtion
+---- Use k-means clustering algorithm
+---- Broadly, apply concepts leraned in Machine Learning course
+        

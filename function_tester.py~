@@ -1,0 +1,14 @@
+import find_author
+import unittest
+
+class TestFindAuthorFunctions(unittest.TestCase):
+	
+	def setUp(self):
+		
+	def test_get_valid_filename(self):
+		#TODO make sure empty filename argument requests for new filename
+		#TODO make sure valid filename returns the "filename"
+		#TODO make sure invalid filename prompts that file does not exit and requests new filename 
+
+if __name__ == "__main__":
+    main()
